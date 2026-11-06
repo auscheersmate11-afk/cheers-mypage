@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>抹茶の専用ページ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700&family=Noto+Sans+JP:wght@900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
+<style>
+/* メンバーひとり分のページ。?p=<鍵> で本人のデータ（d/<id>.json・暗号化）を開く。トーンは旅キャリ 個別専用ページと同じ。
+   KV＝送信→成約の旅程と月の切り替え、この月のまとめ、グループでの動き（スタンプ・コメント・返信とメンバーとの比べ）、日ごと、月ごと。 */
+:root {
+  --bg: #f3f6fb; --surface: #ffffff; --ink: #101a38; --muted: #5b6886; --line: #dde4f0;
+  --navy: #031147; --head: #0b1d5c; --sky: #2f86d6; --sky-soft: #e6f0fb;
+  --yellow: #fdc805; --gold-ink: #946f00; --yellow-soft: #fff4c4;
+  --ok: #2f7a47; --ok-soft: #e2f2e6; --warn: #c2462e; --warn-soft: #fbe4de;
+  --team: #b7c2d8;
+  --btn-bg: #031147; --btn-ink: #ffffff;
+  --hero-bg1: #031147; --hero-bg2: #173c8e; --hero-ink: #ffffff; --hero-muted: #b9c6e6; --hero-line: rgba(255,255,255,.22); --hero-yellow: #fdc805;
+  --font-jp: "Zen Kaku Gothic New", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  --font-num: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --font-brand: "Noto Sans JP", "Hiragino Sans", sans-serif;
+  --radius: 14px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1122; --surface: #121a31; --ink: #e8edf8; --muted: #9aa8c6; --line: #26324f;
+    --navy: #b8c8f2; --head: #c9d6f7; --sky: #6fb0f0; --sky-soft: #16294a;
+    --gold-ink: #f5cf3c; --yellow-soft: #3a3010;
+    --ok: #8fd19e; --ok-soft: #173123; --warn: #f39a84; --warn-soft: #3a1d17;
+    --team: #3a4766;
+    --btn-bg: #fdc805; --btn-ink: #031147;
+    --hero-bg1: #08143a; --hero-bg2: #183a80; --hero-ink: #eef3fb; --hero-muted: #a9bde3; --hero-line: rgba(255,255,255,.16);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b1122; --surface: #121a31; --ink: #e8edf8; --muted: #9aa8c6; --line: #26324f;
+  --navy: #b8c8f2; --head: #c9d6f7; --sky: #6fb0f0; --sky-soft: #16294a;
+  --gold-ink: #f5cf3c; --yellow-soft: #3a3010;
+  --ok: #8fd19e; --ok-soft: #173123; --warn: #f39a84; --warn-soft: #3a1d17;
+  --team: #3a4766;
+  --btn-bg: #fdc805; --btn-ink: #031147;
+  --hero-bg1: #08143a; --hero-bg2: #183a80; --hero-ink: #eef3fb; --hero-muted: #a9bde3; --hero-line: rgba(255,255,255,.16);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-jp); font-size: 15px; line-height: 1.65; }
+.wrap { max-width: 980px; margin: 0 auto; padding: 20px 16px 64px; display: grid; gap: 22px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; word-break: auto-phrase; }
+.sub, .kv-sub { word-break: auto-phrase; }
+a { color: var(--sky); }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; }
+.brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.logo { flex: none; display: grid; place-items: center; width: 58px; height: 58px; border-radius: 16px; background: #031147; }
+.logo img { width: 42px; height: auto; display: block; }
+.eyebrow { font: 700 11.5px var(--font-num); letter-spacing: .22em; color: var(--muted); }
+h1 { font-size: clamp(21px, 3.6vw, 30px); font-weight: 900; color: var(--head); line-height: 1.25; }
+h1 span { display: inline-block; }
+.status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 700; border: 1px solid var(--line); background: var(--surface); color: var(--muted); }
+.chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
+.chip.err i { background: var(--warn); }
+.chip.demo i { background: var(--yellow); }
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 6px 13px; cursor: pointer; font-weight: 700; font-size: 13px; color: var(--head); text-decoration: none; }
+.btn:hover { border-color: var(--sky); }
+.btn.primary { background: var(--btn-bg); border-color: var(--btn-bg); color: var(--btn-ink); }
+.btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.notice { margin: -8px 0 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; font-size: 13.5px; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--yellow-soft); }
+.notice.err { background: var(--warn-soft); border-color: var(--warn); }
+.notice b { font-weight: 900; }
+.notice .btn { margin-left: auto; flex: none; }
+
+/* KV */
+.kv { position: relative; overflow: hidden; border-radius: 20px; padding: 24px 24px 22px; color: var(--hero-ink);
+  background: radial-gradient(110% 80% at 92% 0%, rgba(253,200,5,.18), transparent 55%), linear-gradient(150deg, var(--hero-bg1), var(--hero-bg2));
+  display: grid; gap: 22px; }
+.kv-deco { position: absolute; right: -40px; top: -30px; width: 460px; height: 240px; pointer-events: none; opacity: .9; }
+.kv-deco .sw { fill: none; stroke: var(--hero-line); stroke-width: 14; stroke-linecap: round; }
+.kv-deco .dt { fill: none; stroke: var(--hero-yellow); stroke-width: 2; stroke-dasharray: 2 9; stroke-linecap: round; opacity: .7; }
+.kv-deco .pl { fill: var(--hero-yellow); }
+.kv-head { position: relative; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px 24px; }
+.kv-copy { display: grid; gap: 8px; min-width: 0; }
+.kv-eyebrow { font: 700 12px var(--font-num); letter-spacing: .2em; color: var(--hero-yellow); }
+.kv-hello { font-size: 15px; font-weight: 700; color: var(--hero-muted); }
+.kv-hello b { color: var(--hero-ink); font-size: 17px; font-weight: 900; }
+.kv-big { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-family: var(--font-brand); font-weight: 900; }
+.kv-big .n { font-family: var(--font-num); font-weight: 700; font-size: clamp(46px, 9vw, 76px); line-height: .95; font-variant-numeric: tabular-nums; }
+.kv-big .n.y { color: var(--hero-yellow); text-shadow: 0 0 26px rgba(253,200,5,.35); }
+.kv-big .u { font-size: clamp(16px, 2.6vw, 22px); display: inline-block; transform: skewX(-12deg); }
+.kv-big .arrow { font-family: var(--font-num); font-size: 26px; color: var(--hero-muted); margin-inline: 4px; }
+.kv-sub { margin: 0; color: var(--hero-muted); font-size: 14px; }
+.kv-sub b { color: var(--hero-ink); font-family: var(--font-num); font-size: 16px; }
+.filters { position: relative; display: grid; gap: 8px; justify-items: end; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; border-radius: 12px; background: rgba(3,17,71,.55); border: 1px solid var(--hero-line); }
+.seg button { border: 0; background: transparent; color: var(--hero-muted); padding: 5px 12px; border-radius: 9px; font-weight: 700; font-size: 13px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--hero-yellow); color: #031147; }
+@media (max-width: 760px) { .filters { justify-items: start; } .kv { padding: 20px 16px 18px; } .kv-deco { width: 300px; right: -90px; opacity: .55; } }
+
+.route { position: relative; list-style: none; margin: 0; padding: 14px 0 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); row-gap: 18px; }
+.stop { position: relative; display: grid; justify-items: center; gap: 2px; text-align: center; padding-top: 2px; min-width: 0; }
+.stop::before { content: ""; position: absolute; top: 15px; left: 0; right: 0; border-top: 2px dashed var(--hero-line); }
+.stop:first-child::before { left: 50%; }
+.stop:last-child::before { right: 50%; }
+.stop .dot { position: relative; z-index: 1; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--hero-bg1); border: 2px solid var(--hero-muted); font: 700 13px var(--font-num); }
+.stop.on .dot { border-color: var(--hero-yellow); }
+.stop.last .dot { background: var(--hero-yellow); border-color: var(--hero-yellow); color: #031147; }
+.stop .cnt { font: 700 30px/1.1 var(--font-num); font-variant-numeric: tabular-nums; margin-top: 6px; }
+.stop.last .cnt { color: var(--hero-yellow); }
+.stop.zero .cnt { color: var(--hero-muted); }
+.stop .lbl { font-size: 12.5px; font-weight: 700; color: var(--hero-muted); line-height: 1.3; }
+.stop .rate { position: absolute; z-index: 2; top: 15px; left: 0; transform: translate(-50%, -50%); padding: 1px 7px; border-radius: 999px; background: var(--hero-bg2); border: 1px solid var(--hero-line); font: 700 11.5px var(--font-num); color: var(--hero-yellow); white-space: nowrap; }
+.stop .rate.m { display: none; }
+.kv-legend { margin: -6px 0 0; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--hero-muted); }
+.kv-legend b { font: 700 11.5px var(--font-num); color: var(--hero-yellow); margin-right: 4px; }
+@media (max-width: 760px) {
+  .route { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .stop:nth-child(3n)::before { right: 50%; }
+  .stop:nth-child(3n+1)::before { left: 50%; }
+  .stop .rate { display: none; }
+  .stop .rate.m { display: block; position: static; transform: none; margin-top: 2px; background: transparent; border: 0; padding: 0; }
+}
+
+/* sections */
+.sec { display: grid; gap: 14px; }
+.sec-h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sec-h .ic { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: var(--navy); color: var(--bg); flex: none; }
+.sec-h .ic svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.sec-h h2 { font-size: 20px; font-weight: 900; color: var(--head); }
+.sec-h .scope { margin-left: auto; font-size: 12.5px; color: var(--muted); font-weight: 700; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; min-width: 0; }
+.card h3 { font-size: 16.5px; font-weight: 900; color: var(--head); }
+.card .sub { font-size: 12.5px; color: var(--muted); }
+
+/* いまの状況：遅れ・目標まで・1日のペース */
+.pace { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 12px; }
+@media (max-width: 760px) { .pace { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pace-cell.main { grid-column: 1 / -1; } }
+.pace-cell { display: grid; gap: 4px; align-content: start; }
+.pace-cell .k { font-size: 13.5px; color: var(--muted); font-weight: 900; }
+.pace-cell .v { font: 700 44px/1.05 var(--font-num); color: var(--head); font-variant-numeric: tabular-nums; }
+.pace-cell .v span { font: 900 15px var(--font-jp); color: var(--muted); margin-left: 4px; }
+.pace-cell .d { font-size: 12.5px; color: var(--muted); font-weight: 700; word-break: auto-phrase; }
+.pace-cell .d b { font-family: var(--font-num); font-size: 14.5px; color: var(--ink); }
+.pace-cell.main .v { font-size: 64px; line-height: 1; }
+.pace-cell.main .v span { font-size: 19px; color: inherit; }
+.pace-cell.behind .v { color: var(--warn); }
+.pace-cell.ahead .v { color: var(--ok); }
+.pace-cell.main.behind { background: var(--warn-soft); border-color: var(--warn); }
+.pace-cell.main.ahead { background: var(--ok-soft); border-color: var(--ok); }
+.pace-cell.main .k, .pace-cell.main .d { color: var(--ink); }
+
+/* みんなへの貢献 */
+.ctb { display: grid; gap: 16px; background: linear-gradient(135deg, var(--surface) 55%, var(--yellow-soft)); }
+.ctb-msg { display: flex; align-items: center; gap: 10px; font-weight: 900; color: var(--head); font-size: 16px; line-height: 1.45; word-break: auto-phrase; }
+.ctb-msg .big { flex: none; font-size: 28px; line-height: 1; }
+.ctb-msg small { display: block; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.ctb-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .ctb-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ctb-tile:first-child { grid-column: 1 / -1; } }
+.ctb-tile { position: relative; display: grid; justify-items: center; align-content: start; text-align: center; gap: 2px; padding: 16px 8px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+.ctb-tile .emo { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; background: var(--sky-soft); font-size: 28px; line-height: 1; animation: pop .7s cubic-bezier(.3, 1.6, .5, 1) both; }
+.ctb-tile:nth-child(2n) .emo { background: var(--yellow-soft); }
+.ctb-tile:nth-child(2) .emo { animation-delay: .08s; } .ctb-tile:nth-child(3) .emo { animation-delay: .16s; }
+.ctb-tile .v { font: 700 34px/1.05 var(--font-num); color: var(--head); margin-top: 6px; font-variant-numeric: tabular-nums; }
+.ctb-tile .v span { font: 700 13px var(--font-jp); color: var(--muted); margin-left: 2px; }
+.ctb-tile .k { font-size: 13px; font-weight: 900; color: var(--head); }
+.ctb-tile .d { font-size: 11.5px; color: var(--muted); }
+.ctb-tile .d b { font-family: var(--font-num); color: var(--ink); }
+.ctb-tile .star { position: absolute; top: -10px; right: 8px; white-space: nowrap; font-size: 11px; font-weight: 900; padding: 1px 8px; border-radius: 999px; background: var(--yellow); color: #031147; box-shadow: 0 2px 0 rgba(3,17,71,.12); }
+.ctb-note { font-size: 11.5px; color: var(--muted); }
+@keyframes pop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .ctb-tile .emo { animation: none; } }
+
+/* 日別 */
+.chart-h { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 14px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); font-weight: 700; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.chart { position: relative; margin-top: 10px; min-height: 220px; }
+.chart svg { display: block; width: 100%; height: 220px; overflow: visible; }
+.chart text { font-family: var(--font-num); font-size: 11px; fill: var(--muted); }
+.chart .val { font-weight: 700; fill: var(--head); }
+.tip { position: absolute; z-index: 5; pointer-events: none; padding: 8px 10px; border-radius: 10px; background: var(--navy); color: var(--bg); font-size: 12px; line-height: 1.5; white-space: nowrap; transform: translate(-50%, -100%); }
+.empty { display: grid; place-items: center; min-height: 140px; color: var(--muted); font-size: 13.5px; text-align: center; border: 1px dashed var(--line); border-radius: 12px; padding: 16px; }
+
+/* 表 */
+.tbl-wrap { overflow-x: auto; margin-top: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; vertical-align: middle; }
+th:first-child, td:first-child { text-align: left; }
+thead th { font-size: 12px; color: var(--muted); font-weight: 700; background: var(--bg); }
+td .c { font: 700 16px/1.2 var(--font-num); font-variant-numeric: tabular-nums; }
+td.z .c { color: var(--muted); font-weight: 500; }
+.sbar { display: inline-block; width: 80px; height: 6px; border-radius: 999px; background: var(--bg); vertical-align: middle; margin-right: 8px; overflow: hidden; }
+.sbar span { display: block; height: 100%; background: var(--sky); border-radius: 999px; }
+@media (max-width: 600px) { .sbar { display: none; } }
+
+/* チームとの比べ */
+.cmp { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .cmp { grid-template-columns: minmax(0, 1fr); } }
+.cmp .card { display: grid; gap: 10px; align-content: start; }
+.cmp .k { font-size: 13px; font-weight: 900; color: var(--head); }
+.bar-row { display: grid; grid-template-columns: minmax(86px, 118px) minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.bar-row .track { height: 12px; border-radius: 999px; background: var(--bg); overflow: hidden; }
+.bar-row .fill { height: 100%; border-radius: 999px; background: var(--team); }
+.bar-row.me { color: var(--head); }
+.bar-row.me .fill { background: var(--yellow); }
+.bar-row .v { font: 700 16px var(--font-num); color: var(--head); font-variant-numeric: tabular-nums; min-width: 38px; text-align: right; }
+.bar-row:not(.me) .v { color: var(--muted); font-weight: 600; }
+
+.foot { font-size: 12px; color: var(--muted); text-align: center; display: grid; gap: 4px; }
+.lost { display: grid; gap: 10px; justify-items: center; text-align: center; padding: 40px 18px; }
+.lost h2 { font-size: 20px; font-weight: 900; color: var(--head); }
+.lost p { margin: 0; color: var(--muted); font-size: 14px; }
+
+/* 月の切り替え */
+.monthbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.monthbar button, .monthbar select { border: 1px solid var(--hero-line); background: rgba(3,17,71,.55); color: var(--hero-ink); border-radius: 11px; height: 40px; font-weight: 700; font-size: 14px; cursor: pointer; }
+.monthbar .ar { width: 40px; display: grid; place-items: center; font: 700 18px var(--font-num); }
+.monthbar .ar:disabled { opacity: .35; cursor: default; }
+.monthbar select { padding: 0 10px; min-width: 132px; font-size: 15px; font-weight: 900; }
+.monthbar select option { color: #101a38; background: #fff; }
+.monthbar .allb { padding: 0 13px; }
+.monthbar .allb[aria-pressed="true"] { background: var(--hero-yellow); border-color: var(--hero-yellow); color: #031147; }
+.kv-big { row-gap: 6px; }
+.kv-end { display: inline-flex; align-items: baseline; gap: 2px 8px; white-space: nowrap; }
+
+/* この月のまとめの下の一言 */
+.hints { display: grid; gap: 6px; }
+.hint { font-size: 13px; font-weight: 700; color: var(--muted); padding: 9px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); word-break: auto-phrase; }
+.hint b { font-family: var(--font-num); font-size: 15px; color: var(--ink); }
+.hint.warn { background: var(--yellow-soft); border-color: var(--yellow); color: var(--ink); }
+
+/* グループ */
+.gtabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.gtabs button { border: 1px solid var(--line); background: var(--surface); color: var(--head); border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.gtabs button[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: var(--bg); }
+.cmp-h { font-size: 14.5px; font-weight: 900; color: var(--head); margin-top: 4px; }
+.cmp .k { font-size: 14px; }
+.cmp .avg { font-size: 12px; font-weight: 700; color: var(--muted); }
+.cmp .avg b { font-family: var(--font-num); font-size: 14px; color: var(--ink); }
+.bar-row .who { min-width: 0; line-height: 1.25; word-break: keep-all; overflow-wrap: anywhere; }
+.bar-row .who small { display: block; font-size: 10.5px; color: var(--gold-ink); font-weight: 900; }
+
+/* 月ごとの表 */
+#monTbl tbody tr { cursor: pointer; }
+#monTbl tbody tr:hover td { background: var(--sky-soft); }
+#monTbl tr.sel td { background: var(--yellow-soft); }
+#monTbl tfoot td { font-weight: 900; border-bottom: 0; }
+.mbtn { border: 0; background: transparent; padding: 0; font-weight: 900; color: var(--head); cursor: pointer; font-size: 13.5px; }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"><img src="data:image/png;base64,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" alt=""></div>
+      <div>
+        <div class="eyebrow">CHEERS MATE · MY PAGE</div>
+        <h1><span id="hName">抹茶の専用ページ</span></h1>
+      </div>
+    </div>
+    <div class="status">
+      <span class="chip" id="chip"><i></i><span id="stamp">読み込み中…</span></span>
+    </div>
+  </header>
+  <div class="notice" id="notice" role="status" hidden></div>
+
+  <div class="card lost" id="lost" hidden>
+    <h2>ページが見つかりませんでした</h2>
+    <p>届いた専用ページのURLから、もう一度開いてください。</p>
+  </div>
+
+  <div id="main" hidden style="display:grid;gap:22px">
+  <section class="kv" aria-labelledby="kvTitle">
+    <svg class="kv-deco" viewBox="0 0 460 240" aria-hidden="true">
+      <path class="sw" d="M30 220 C 120 120, 230 90, 330 120"/>
+      <path class="dt" d="M330 120 C 380 135, 405 100, 420 60"/>
+      <g transform="translate(424 50) rotate(20)"><path class="pl" transform="translate(-12 -12)" d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></g>
+    </svg>
+    <div class="kv-head">
+      <div class="kv-copy">
+        <div class="kv-eyebrow" id="kvScope"></div>
+        <div class="kv-hello" id="kvHello"></div>
+        <h2 class="kv-big" id="kvTitle"><span class="u" id="kvLead"></span><span class="n" id="kvSent">0</span><span class="u">件送って</span><span class="arrow">→</span><span class="kv-end"><span class="u">返信</span><span class="n y" id="kvReply">0</span><span class="u">件</span></span></h2>
+        <p class="kv-sub" id="kvSub"></p>
+      </div>
+      <div class="filters">
+        <div class="monthbar" role="group" aria-label="見る月">
+          <button type="button" class="ar" id="mPrev" aria-label="前の月">‹</button>
+          <select id="mSel" aria-label="月をえらぶ"></select>
+          <button type="button" class="ar" id="mNext" aria-label="次の月">›</button>
+          <button type="button" class="allb" id="mAll" aria-pressed="false">全期間</button>
+        </div>
+      </div>
+    </div>
+    <ol class="route" id="route" aria-label="ステージごとの件数"></ol>
+    <p class="kv-legend"><span><b>黄色の％</b>＝ひとつ前のステージから進んだ割合</span></p>
+  </section>
+
+  <section class="sec" aria-labelledby="nowH">
+    <div class="sec-h">
+      <span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+      <h2 id="nowH">この月のまとめ</h2>
+      <span class="scope" id="nowScope"></span>
+    </div>
+    <div class="pace" id="pace"></div>
+    <div class="hints" id="hints"></div>
+  </section>
+
+  <section class="sec" id="grpSec" aria-labelledby="grpH" hidden>
+    <div class="sec-h">
+      <span class="ic"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg></span>
+      <h2 id="grpH">グループでの動き</h2>
+      <span class="scope" id="grpScope"></span>
+    </div>
+    <div class="gtabs" id="gtabs" role="group" aria-label="グループをえらぶ"></div>
+    <div class="card ctb" id="ctb"></div>
+    <div class="cmp-h" id="cmpH"></div>
+    <div class="cmp" id="cmp"></div>
+  </section>
+
+  <section class="sec" aria-labelledby="dayH">
+    <div class="sec-h">
+      <span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+      <h2 id="dayH">日ごとの送信</h2>
+      <span class="scope" id="dayScope"></span>
+    </div>
+    <div class="card">
+      <div class="chart-h">
+        <h3>送った数（棒）と返信（点）</h3>
+        <div class="legend"><span><i style="background:var(--sky)"></i>送信</span><span><i style="background:var(--yellow);border-radius:50%"></i>その日に送った分の返信</span></div>
+      </div>
+      <div class="chart" id="chart"></div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="monH">
+    <div class="sec-h">
+      <span class="ic"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17V9M13 17V5M18 17v-6"/></svg></span>
+      <h2 id="monH">月ごとの数字</h2>
+      <span class="scope">行を押すとその月を表示</span>
+    </div>
+    <div class="card">
+      <div class="tbl-wrap" style="margin-top:0"><table id="monTbl"></table></div>
+    </div>
+  </section>
+  </div>
+
+  <div class="foot">
+    <span>数字は毎朝更新しています。Discordの数字はグループの部屋の中の動きです。</span>
+    <span>このページはあなた専用です。URLは人に共有しないでください。</span>
+  </div>
+</div>
+<script>
+(function () {
+  'use strict';
+  var STAGES = [
+    { k: 's', label: '送信' }, { k: 'r', label: '返信' }, { k: 'f', label: 'サンプルフォーム' },
+    { k: 'p', label: 'サンプル決済' }, { k: 'h', label: 'サンプル発送' }, { k: 'o', label: '成約' }
+  ];
+  var METRICS = [
+    { k: 'dm', emo: '📨', label: 'DM送信', u: '件' },
+    { k: 'st', emo: '👏', label: '送ったスタンプ', u: '個' },
+    { k: 'c', emo: '💬', label: 'コメント', u: '件' },
+    { k: 'rp', emo: '↩️', label: '返信', u: '件' }
+  ];
+  var ZERO = { s: 0, r: 0, f: 0, p: 0, h: 0, o: 0 };
+  var EN = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+  var S = { d: null, m: null, gName: '', months: [] };
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function fmt(n) { return Number(n).toLocaleString('ja-JP'); }
+  function one(n) { return (Math.round(n * 10) / 10).toString(); }
+  function pct(a, b) { return b ? Math.round(a / b * 100) + '%' : '—'; }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function yOf(m) { return +m.slice(0, 4); }
+  function moOf(m) { return +m.slice(5, 7); }
+  function mShort(m) { return moOf(m) + '月'; }
+  function mLong(m) { return yOf(m) + '年' + moOf(m) + '月'; }
+  function prevMonth(m) { var y = yOf(m), n = moOf(m) - 1; if (!n) { n = 12; y--; } return y + '-' + pad(n); }
+  function daysIn(m) { return new Date(yOf(m), moOf(m), 0).getDate(); }
+  function cur() { return S.m === 'all' ? S.d.all : (S.d.m[S.m] || ZERO); }
+
+  function countUp(el) {
+    var to = +el.dataset.to;
+    el.textContent = fmt(to);
+    if (!to || document.hidden || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    var dur = 900;
+    requestAnimationFrame(function (t0) {
+      (function step(t) {
+        var p = Math.min(1, (t - t0) / dur);
+        el.textContent = fmt(Math.round(to * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(step); else el.textContent = fmt(to);
+      })(t0);
+    });
+    setTimeout(function () { el.textContent = fmt(to); }, dur + 400);
+  }
+
+  // ===== 月の切り替え =====
+  function monthList(d) {
+    var seen = {}; seen[d.now] = 1;
+    Object.keys(d.m).forEach(function (k) { seen[k] = 1; });
+    d.g.forEach(function (g) { Object.keys(g.m).forEach(function (k) { seen[k] = 1; }); });
+    return Object.keys(seen).sort().reverse();
+  }
+  function firstMonth(d) {
+    var now = d.m[d.now];
+    if (now && now.s) return d.now;
+    var ms = Object.keys(d.m).filter(function (k) { return d.m[k].s; }).sort().reverse();
+    return ms[0] || d.now;
+  }
+  function setMonth(m) { S.m = m; render(); }
+  function renderBar() {
+    var sel = $('mSel');
+    sel.innerHTML = S.months.map(function (m) { return '<option value="' + m + '">' + mLong(m) + '</option>'; }).join('');
+    var isAll = S.m === 'all';
+    sel.value = isAll ? (S.last || S.months[0]) : S.m;
+    $('mAll').setAttribute('aria-pressed', isAll ? 'true' : 'false');
+    var i = S.months.indexOf(S.m);
+    $('mNext').disabled = isAll || i <= 0;
+    $('mPrev').disabled = isAll || i < 0 || i >= S.months.length - 1;
+  }
+
+  // ===== KV =====
+  function renderKV(c) {
+    var isAll = S.m === 'all';
+    $('kvScope').textContent = isAll ? 'ALL TIME' : EN[moOf(S.m) - 1] + ' ' + yOf(S.m);
+    $('kvHello').innerHTML = '<b>' + esc(S.d.n) + '</b> さんの結果';
+    $('kvLead').textContent = isAll ? 'これまで' : mShort(S.m) + 'は';
+    $('kvSent').textContent = fmt(c.s);
+    $('kvReply').textContent = fmt(c.r);
+    $('kvSub').innerHTML = c.s
+      ? '返信率 <b>' + pct(c.r, c.s) + '</b>　サンプルフォーム <b>' + fmt(c.f) + '</b>件　成約 <b>' + fmt(c.o) + '</b>件'
+      : (isAll ? 'まだ送信の記録がありません。' : 'この月の送信はまだありません。');
+    $('route').innerHTML = STAGES.map(function (s, i) {
+      var v = c[s.k], prev = i ? c[STAGES[i - 1].k] : 0;
+      var rate = i && prev && v <= prev ? pct(v, prev) : '';
+      var cls = 'stop' + (v ? ' on' : ' zero') + (i === STAGES.length - 1 ? ' last' : '');
+      return '<li class="' + cls + '">' + (rate ? '<span class="rate">' + rate + '</span>' : '') +
+        '<span class="dot">' + (i + 1) + '</span><span class="cnt">' + fmt(v) + '</span><span class="lbl">' + esc(s.label) + '</span>' +
+        (rate ? '<span class="rate m">' + rate + '</span>' : '') + '</li>';
+    }).join('');
+  }
+
+  // ===== この月のまとめ =====
+  function cell(cls, k, v, u, d) { return '<div class="card pace-cell ' + cls + '"><div class="k">' + k + '</div><div class="v">' + v + '<span>' + u + '</span></div><div class="d">' + d + '</div></div>'; }
+  function renderNow(c) {
+    var d = S.d, h = '';
+    if (S.m === 'all') {
+      $('nowH').textContent = 'これまでのまとめ'; $('nowScope').textContent = '全期間';
+      var ms = Object.keys(d.m).filter(function (k) { return d.m[k].s; });
+      h = cell('main', 'これまでの送信', fmt(c.s), '件', ms.length ? '返信 <b>' + fmt(c.r) + '</b>件' : '') +
+        cell('', '送った月', ms.length, 'か月', 'これまでの合計') +
+        cell('', '1か月の平均', ms.length ? fmt(Math.round(c.s / ms.length)) : '0', '件', '送った月の平均');
+    } else {
+      var dd = d.days[S.m] || {}, sent = Object.keys(dd).filter(function (k) { return dd[k][0]; }).length;
+      var span = S.m === d.now ? d.day : daysIn(S.m);
+      var was = (d.m[prevMonth(S.m)] || ZERO).s, diff = c.s - was;
+      var dtxt = S.m === d.now ? '先月は <b>' + fmt(was) + '</b>件' : diff > 0 ? '先月より <b>+' + fmt(diff) + '</b>件' : diff < 0 ? '先月より <b>−' + fmt(-diff) + '</b>件' : '先月と同じ';
+      $('nowH').textContent = 'この月のまとめ'; $('nowScope').textContent = mLong(S.m);
+      h = cell('main' + (diff > 0 ? ' ahead' : ''), mShort(S.m) + 'の送信', fmt(c.s), '件', dtxt) +
+        cell('', '送った日数', sent, '日', fmt(span) + '日のうち') +
+        cell('', '送った日の平均', sent ? one(c.s / sent) : '0', '件', '1日あたり');
+    }
+    $('pace').innerHTML = h;
+    var t = '';
+    if (d.pend) t += '<div class="hint warn">サンプルの決済待ちが <b>' + d.pend + '</b> 件あります</div>';
+    if (d.nodate) t += '<div class="hint">リストに日付が空の行が <b>' + d.nodate + '</b> 件あります。日付を入れると月の数字に入ります</div>';
+    $('hints').innerHTML = t;
+  }
+
+  // ===== グループ =====
+  function people(g) {
+    if (S.m !== 'all') return g.m[S.m] || [];
+    var by = {}, ord = [];
+    Object.keys(g.m).forEach(function (k) {
+      g.m[k].forEach(function (p) {
+        var id = p.me ? '@me' : p.n, o = by[id];
+        if (!o) { o = by[id] = { n: p.n, me: p.me, lead: p.lead, sup: p.sup, dm: 0, st: 0, c: 0, rp: 0 }; ord.push(o); }
+        METRICS.forEach(function (m) { o[m.k] += p[m.k]; });
+      });
+    });
+    return ord;
+  }
+  function renderGroups() {
+    var d = S.d, sec = $('grpSec');
+    if (!d.g.length) { sec.hidden = true; return; }
+    sec.hidden = false;
+    $('grpScope').textContent = S.m === 'all' ? '全期間' : mLong(S.m);
+    var list = d.g.filter(function (g) { return S.m === 'all' || g.m[S.m]; });
+    var tabs = $('gtabs'), ctb = $('ctb'), cmp = $('cmp'), cmpH = $('cmpH');
+    if (!list.length) {
+      tabs.innerHTML = ''; cmp.innerHTML = ''; cmpH.textContent = '';
+      ctb.innerHTML = '<div class="empty">この月に入っていたグループはありません</div>';
+      return;
+    }
+    var g = list.filter(function (x) { return x.name === S.gName; })[0] || list[0];
+    S.gName = g.name;
+    tabs.innerHTML = list.length > 1 ? list.map(function (x) {
+      return '<button type="button" data-g="' + esc(x.name) + '" aria-pressed="' + (x === g) + '">' + esc(x.name) + '</button>';
+    }).join('') : '';
+    var ppl = people(g), me = ppl.filter(function (p) { return p.me; })[0] || { dm: 0, st: 0, c: 0, rp: 0 };
+    var base = ppl.filter(function (p) { return !p.sup; });
+    function avg(k) { return base.length ? base.reduce(function (a, p) { return a + p[k]; }, 0) / base.length : 0; }
+    var mine = me.st + me.c + me.rp, ave = avg('st') + avg('c') + avg('rp');
+    var msg = !mine ? ['🌱', 'スタンプひとつから、グループに参加してみよう'] : mine >= ave ? ['🎉', 'あなたがグループを盛り上げている！'] : ['👏', 'グループを応援中！'];
+    var multi = base.length > 1;
+    ctb.innerHTML = '<div class="ctb-msg"><span class="big">' + msg[0] + '</span><span>' + msg[1] + '<small>' + esc(g.name) + '</small></span></div>' +
+      '<div class="ctb-grid">' + METRICS.slice(1).map(function (m) {
+        var a = avg(m.k), v = me[m.k];
+        return '<div class="ctb-tile">' + (multi && v > a ? '<span class="star">平均以上✨</span>' : '') +
+          '<span class="emo">' + m.emo + '</span><span class="v"><span class="cu" data-to="' + v + '" style="font:inherit;color:inherit;margin:0">' + fmt(v) + '</span><span>' + m.u + '</span></span>' +
+          '<span class="k">' + m.label + '</span>' + (multi ? '<span class="d">グループ平均 <b>' + one(a) + '</b></span>' : '') + '</div>';
+      }).join('') + '</div>';
+    Array.prototype.forEach.call(ctb.querySelectorAll('.cu'), countUp);
+    if (!multi) { cmpH.textContent = ''; cmp.innerHTML = ''; return; }
+    cmpH.textContent = 'グループの人とくらべる';
+    var rows = ppl.slice().sort(function (a, b) { return (b.me ? 1 : 0) - (a.me ? 1 : 0); }).filter(function (p) { return !p.sup || p.me; });
+    cmp.innerHTML = METRICS.map(function (m) {
+      var max = Math.max.apply(null, rows.map(function (p) { return p[m.k]; }).concat([1]));
+      return '<div class="card"><div class="k">' + m.emo + ' ' + m.label + '</div><div class="avg">グループ平均 <b>' + one(avg(m.k)) + '</b>' + m.u + '</div>' +
+        rows.map(function (p) {
+          return '<div class="bar-row' + (p.me ? ' me' : '') + '"><span class="who">' + (p.me ? 'あなた' : esc(p.n) + 'さん') + (p.lead ? '<small>リーダー</small>' : p.sup ? '<small>見守り</small>' : '') + '</span>' +
+            '<span class="track"><span class="fill" style="display:block;width:' + (p[m.k] / max * 100).toFixed(1) + '%"></span></span><span class="v">' + fmt(p[m.k]) + '</span></div>';
+        }).join('') + '</div>';
+    }).join('');
+  }
+
+  // ===== 日ごと・月ごとのグラフ =====
+  function niceStep(m) { var s = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000]; for (var i = 0; i < s.length; i++) if (m / s[i] <= 5) return s[i]; return Math.ceil(m / 5); }
+  function renderChart() {
+    var box = $('chart'), d = S.d, items = [], wd = '日月火水木金土', isAll = S.m === 'all';
+    $('dayH').textContent = isAll ? '月ごとの送信' : '日ごとの送信';
+    $('dayScope').textContent = isAll ? '全期間' : mLong(S.m);
+    if (isAll) {
+      Object.keys(d.m).sort().forEach(function (k) { if (d.m[k].s) items.push({ lbl: moOf(k) + '月', tip: mLong(k), s: d.m[k].s, r: d.m[k].r }); });
+    } else {
+      var dd = d.days[S.m] || {};
+      for (var i = 1; i <= daysIn(S.m); i++) {
+        var o = dd[i] || [0, 0], dt = new Date(yOf(S.m), moOf(S.m) - 1, i);
+        items.push({ lbl: i, tip: moOf(S.m) + '/' + i + '（' + wd.charAt(dt.getDay()) + '）', s: o[0], r: o[1] });
+      }
+    }
+    if (!items.some(function (x) { return x.s; })) { box.innerHTML = '<div class="empty">' + (isAll ? 'まだ送信の記録がありません' : 'この月の送信はまだありません') + '</div>'; return; }
+    var W = Math.max(300, box.clientWidth || 800), H = 220, L = 30, R = 6, T = 18, B = 26;
+    var maxS = Math.max.apply(null, items.map(function (x) { return x.s; }).concat([1]));
+    var step = niceStep(maxS), top = Math.ceil(maxS / step) * step;
+    var bw = (W - L - R) / items.length;
+    function y(v) { return T + (H - T - B) * (1 - v / top); }
+    var g = '';
+    for (var v = 0; v <= top; v += step) g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="var(--line)"/><text x="' + (L - 6) + '" y="' + (y(v) + 4) + '" text-anchor="end">' + v + '</text>';
+    items.forEach(function (o, i) {
+      var x = L + i * bw, cx = (x + bw / 2).toFixed(1);
+      if (o.s) {
+        g += '<rect x="' + (x + bw * 0.16).toFixed(1) + '" y="' + y(o.s).toFixed(1) + '" width="' + Math.max(1, bw * 0.68).toFixed(1) + '" height="' + (y(0) - y(o.s)).toFixed(1) + '" rx="3" fill="var(--sky)"/>';
+        if (bw >= 22) g += '<text class="val" x="' + cx + '" y="' + (y(o.s) - 5).toFixed(1) + '" text-anchor="middle">' + o.s + '</text>';
+      }
+      if (o.r) g += '<circle cx="' + cx + '" cy="' + y(o.r).toFixed(1) + '" r="' + (bw < 14 ? 3 : 4.5) + '" fill="var(--yellow)" stroke="var(--navy)" stroke-width="1.5"/>';
+      var showLbl = isAll || bw >= 15 || i === 0 || (i + 1) % 5 === 0;
+      if (showLbl) g += '<text x="' + cx + '" y="' + (H - 8) + '" text-anchor="middle"' + (bw < 24 ? ' style="font-size:10px"' : '') + '>' + o.lbl + '</text>';
+      g += '<rect class="hit" data-i="' + i + '" x="' + x.toFixed(1) + '" y="' + T + '" width="' + bw.toFixed(1) + '" height="' + (H - T - B) + '" fill="transparent"/>';
+    });
+    box.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="送信数と返信数">' + g + '</svg><div class="tip" hidden></div>';
+    var tip = box.querySelector('.tip'), svg = box.querySelector('svg');
+    svg.addEventListener('pointermove', function (ev) {
+      var h = ev.target.closest('.hit'); if (!h) { tip.hidden = true; return; }
+      var o = items[+h.dataset.i];
+      tip.innerHTML = esc(o.tip) + '<br>送信 <b>' + o.s + '</b>・返信 <b>' + o.r + '</b>';
+      var rect = box.getBoundingClientRect();
+      tip.style.left = Math.min(Math.max(ev.clientX - rect.left, 60), rect.width - 60) + 'px';
+      tip.style.top = (ev.clientY - rect.top - 10) + 'px';
+      tip.hidden = false;
+    });
+    svg.addEventListener('pointerleave', function () { tip.hidden = true; });
+  }
+
+  // ===== 月ごとの数字 =====
+  function renderTable() {
+    var d = S.d, ms = Object.keys(d.m).sort().reverse();
+    function td(v) { return '<td' + (v ? '' : ' class="z"') + '><span class="c">' + fmt(v) + '</span></td>'; }
+    var h = '<thead><tr><th>月</th>' + STAGES.map(function (s) { return '<th>' + s.label + '</th>'; }).join('') + '</tr></thead><tbody>';
+    if (!ms.length) h += '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:22px">まだ記録がありません</td></tr>';
+    ms.forEach(function (k) {
+      h += '<tr data-m="' + k + '"' + (k === S.m ? ' class="sel"' : '') + '><td><button type="button" class="mbtn">' + mLong(k) + '</button></td>' +
+        STAGES.map(function (s) { return td(d.m[k][s.k]); }).join('') + '</tr>';
+    });
+    h += '</tbody><tfoot><tr><td>合計</td>' + STAGES.map(function (s) { return td(d.all[s.k]); }).join('') + '</tr></tfoot>';
+    $('monTbl').innerHTML = h;
+  }
+
+  function render() {
+    var c = cur();
+    renderBar(); renderKV(c); renderNow(c); renderGroups(); renderChart(); renderTable();
+  }
+
+  // ===== 読み込み（URLの鍵で本人のデータだけ開く） =====
+  function sha(s) { return crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)).then(function (b) { return new Uint8Array(b); }); }
+  function hex(b) { return Array.prototype.map.call(b, function (x) { return (x < 16 ? '0' : '') + x.toString(16); }).join(''); }
+  function unb64(s) { return Uint8Array.from(atob(s), function (c) { return c.charCodeAt(0); }); }
+  function lost() { $('main').hidden = true; $('lost').hidden = false; $('chip').className = 'chip err'; $('stamp').textContent = 'URLを確認してください'; }
+  function load() {
+    var tok = new URLSearchParams(location.search).get('p');
+    if (!tok) { lost(); return; }
+    if (!window.crypto || !crypto.subtle || !window.DecompressionStream) {
+      $('notice').hidden = false; $('notice').className = 'notice err';
+      $('notice').innerHTML = '<span><b>このブラウザでは開けませんでした。</b>右上のメニューから「ブラウザで開く」を選んでください。</span>';
+      lost(); return;
+    }
+    Promise.all([sha('cm-matcha-id:' + tok), sha('cm-matcha-key:' + tok)]).then(function (r) {
+      return crypto.subtle.importKey('raw', r[1], 'AES-GCM', false, ['decrypt']).then(function (key) {
+        return fetch('d/' + hex(r[0]).slice(0, 24) + '.json', { cache: 'no-store' }).then(function (res) {
+          if (!res.ok) throw new Error('notfound');
+          return res.json();
+        }).then(function (j) {
+          return crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(j.n) }, key, unb64(j.c));
+        }).then(function (plain) {
+          return new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('deflate'))).text();
+        });
+      });
+    }).then(function (t) {
+      var d = JSON.parse(t);
+      S.d = d; S.months = monthList(d); S.m = firstMonth(d); S.last = S.m;
+      $('hName').textContent = d.n + 'さんの専用ページ';
+      document.title = d.n + 'さん｜抹茶の専用ページ';
+      $('stamp').textContent = d.asof + ' 時点';
+      $('lost').hidden = true; $('main').hidden = false;
+      render();
+    }).catch(lost);
+  }
+
+  $('mSel').addEventListener('change', function () { S.last = this.value; setMonth(this.value); });
+  $('mAll').addEventListener('click', function () { setMonth(S.m === 'all' ? (S.last || S.months[0]) : 'all'); });
+  $('mPrev').addEventListener('click', function () { var i = S.months.indexOf(S.m); if (i >= 0 && i < S.months.length - 1) { S.last = S.months[i + 1]; setMonth(S.last); } });
+  $('mNext').addEventListener('click', function () { var i = S.months.indexOf(S.m); if (i > 0) { S.last = S.months[i - 1]; setMonth(S.last); } });
+  $('gtabs').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; S.gName = b.dataset.g; renderGroups(); });
+  $('monTbl').addEventListener('click', function (e) { var t = e.target.closest('tr[data-m]'); if (!t) return; S.last = t.dataset.m; setMonth(t.dataset.m); });
+  var rt; window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { if (S.d) renderChart(); }, 150); });
+  load();
+})();
+</script>
+</body>
+</html>
